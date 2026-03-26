@@ -19,6 +19,17 @@ export function AppLayout() {
     }
   }
 
+  const handleSwitchAccount = async () => {
+    try {
+      await signOutFromFirebase()
+    } catch (error) {
+      console.error('[Auth] Firebase sign-out failed during account switch:', error)
+    } finally {
+      clearAuth()
+      navigate('/login?switchAccount=1', { replace: true })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
       <header className="border-b border-slate-200 bg-white">
@@ -32,6 +43,15 @@ export function AppLayout() {
               <Link className="hover:text-slate-900" to="/dashboard">
                 Dashboard
               </Link>
+            ) : null}
+            {isAuthenticated ? (
+              <button
+                className="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                onClick={handleSwitchAccount}
+                type="button"
+              >
+                Switch account
+              </button>
             ) : null}
             {isAuthenticated ? (
               <button
