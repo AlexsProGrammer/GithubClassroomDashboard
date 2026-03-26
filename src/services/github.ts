@@ -2,7 +2,7 @@ import { Octokit } from 'octokit'
 
 import { useAuthStore } from '../store/useAuthStore'
 
-type GitHubRepo = {
+export type GitHubRepo = {
   id: number
   name: string
   full_name: string
@@ -15,6 +15,11 @@ type GitHubRepo = {
 
 export type QuestStatusConclusion = 'success' | 'failure' | null
 
+type SolutionsRepoConfig = {
+  owner: string
+  repo: string
+}
+
 function getClassroomRepoPrefix(): string {
   const value = import.meta.env[
     'VITE_GITHUB_CLASSROOM_REPO_PREFIX' as keyof ImportMetaEnv
@@ -25,6 +30,33 @@ function getClassroomRepoPrefix(): string {
   }
 
   return value.trim()
+}
+
+function getClassroomRepoOwner(): string {
+  const value = import.meta.env[
+    'VITE_GITHUB_CLASSROOM_OWNER' as keyof ImportMetaEnv
+  ]
+
+  if (typeof value !== 'string') {
+    return ''
+  }
+
+  return value.trim()
+}
+
+function getSolutionsRepoConfig(): SolutionsRepoConfig | null {
+  const owner = String(
+    import.meta.env['VITE_GITHUB_SOLUTIONS_OWNER' as keyof ImportMetaEnv] ?? '',
+  ).trim()
+  const repo = String(
+    import.meta.env['VITE_GITHUB_SOLUTIONS_REPO' as keyof ImportMetaEnv] ?? '',
+  ).trim()
+
+  if (!owner || !repo) {
+    return null
+  }
+
+  return { owner, repo }
 }
 
 export function createGitHubClient(githubToken: string): Octokit {
@@ -54,21 +86,36 @@ export async function fetchUserClassroomRepos(username: string): Promise<GitHubR
 
   const octokit = createGitHubClientFromStore()
   const repoPrefix = getClassroomRepoPrefix()
+  const classroomOwner = getClassroomRepoOwner().toLowerCase()
 
-  const repos = await octokit.paginate(octokit.rest.repos.listForUser, {
-    username: trimmedUsername,
+  const repos = await octokit.paginate(octokit.rest.repos.listForAuthenticatedUser, {
     per_page: 100,
     sort: 'updated',
     direction: 'desc',
+    affiliation: 'owner,collaborator,organization_member',
+  })
+
+  const ownRepos = repos.filter((repo) => {
+    if (!classroomOwner) {
+      return true
+    }
+
+    return repo.owner.login.toLowerCase() === classroomOwner
   })
 
   const normalizedPrefix = repoPrefix.toLowerCase()
 
   if (!normalizedPrefix) {
-    return repos
+    return ownRepos
   }
 
-  return repos.filter((repo) => repo.name.toLowerCase().startsWith(normalizedPrefix))
+  return ownRepos.filter((repo) => repo.name.toLowerCase().startsWith(normalizedPrefix))
+}
+
+export async function fetchAuthenticatedUsername(): Promise<string> {
+  const octokit = createGitHubClientFromStore()
+  const response = await octokit.rest.users.getAuthenticated()
+  return response.data.login
 }
 
 export async function fetchQuestStatus(
@@ -101,4 +148,45 @@ export async function fetchQuestStatus(
   }
 
   return null
+}
+
+export function getSolutionLink(questId: string): string | null {
+  const config = getSolutionsRepoConfig()
+
+  if (!config) {
+    return null
+  }
+
+  return `https://github.dev/${config.owner}/${config.repo}/tree/main/${questId}`
+}
+
+export async function checkSolutionExists(questId: string): Promise<boolean> {
+  const config = getSolutionsRepoConfig()
+
+  if (!config) {
+    return false
+  }
+
+  const octokit = createGitHubClientFromStore()
+
+  try {
+    const response = await octokit.rest.repos.getContent({
+      owner: config.owner,
+      repo: config.repo,
+      path: questId,
+      ref: 'main',
+    })
+
+    return response.status === 200
+  } catch (error) {
+    const status = typeof error === 'object' && error !== null && 'status' in error
+      ? (error as { status?: number }).status
+      : undefined
+
+    if (status === 404) {
+      return false
+    }
+
+    throw error
+  }
 }

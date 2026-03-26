@@ -66,14 +66,14 @@ Kopiere den folgenden Textblock und speichere ihn als `IMPLEMENTATION.md` in dei
 - [x] **Step 3.1:** Create `src/services/github.ts`. Initialize an `Octokit` instance. Write a factory function that takes the `githubToken` from Zustand to authenticate Octokit.
 - [x] **Step 3.2:** Implement `fetchUserClassroomRepos(username)`. Query the GitHub REST API (`GET /users/{username}/repos`) and filter for repositories matching the Classroom naming convention (e.g., prefix `Quest-`). add this to .env as config, allow no prefix to query all classrooms.
 - [x] **Step 3.3:** Implement `fetchQuestStatus(owner, repo)`. Query `GET /repos/{owner}/{repo}/actions/runs`. Return the `conclusion` (success, failure, or null) of the latest workflow run.
-- [ ] **Verification:** Temporarily inject a valid GitHub token into the app. Call `fetchQuestStatus` in a `useEffect` and verify the console logs either `success` or `failure` matching the real GitHub Actions state of a test repository.
+- [x] **Verification:** Temporarily inject a valid GitHub token into the app. Call `fetchQuestStatus` in a `useEffect` and verify the console logs either `success` or `failure` matching the real GitHub Actions state of a test repository.
 
 #### Phase 4: Dashboard & Quest UI Implementation
-- [ ] **Step 4.1:** Create static Quest definitions in `src/types/index.ts` (e.g., Array of objects containing `id`, `title`, `description`, `repoNameTemplate`).
-- [ ] **Step 4.2:** Create `src/components/quests/QuestCard.tsx`. It must accept Quest details and a `status` prop ('pending', 'success', 'failure') and render appropriate Tailwind styling/icons.
-- [ ] **Step 4.3:** Implement `Dashboard.tsx`. On mount, use Octokit to fetch the workflow statuses for all predefined Quests based on the logged-in user's GitHub username.
-- [ ] **Step 4.4:** Protect the `/dashboard` route. If `!isAuthenticated` in Zustand, redirect to `/login`.
-- [ ] **Step 4.5:** Implement a function `checkSolutionExists(questId)` using `octokit.rest.repos.getContent`. It should query the public solutions repository for a folder matching the `questId`. If it returns a 200 status, render the 'View Solution' button linking to `https://github.dev/{owner}/{solutions-repo}/tree/main/{questId}`. Catch 404 errors gracefully and hide the button.
+- [x] **Step 4.1:** Create static Quest definitions in `src/types/index.ts` (e.g., Array of objects containing `id`, `title`, `description`, `repoNameTemplate`).
+- [x] **Step 4.2:** Create `src/components/quests/QuestCard.tsx`. It must accept Quest details and a `status` prop ('pending', 'success', 'failure') and render appropriate Tailwind styling/icons.
+- [x] **Step 4.3:** Implement `Dashboard.tsx`. On mount, use Octokit to fetch the workflow statuses for all predefined Quests based on the logged-in user's GitHub username.
+- [x] **Step 4.4:** Protect the `/dashboard` route. If `!isAuthenticated` in Zustand, redirect to `/login`.
+- [x] **Step 4.5:** Implement a function `checkSolutionExists(questId)` using `octokit.rest.repos.getContent`. It should query the public solutions repository for a folder matching the `questId`. If it returns a 200 status, render the 'View Solution' button linking to `https://github.dev/{owner}/{solutions-repo}/tree/main/{questId}`. Catch 404 errors gracefully and hide the button.
 - [ ] **Verification:** Log in via the UI. Verify the Dashboard renders a list of QuestCards. Cards should display green checkmarks or red X's reflecting the live GitHub Actions status of the authenticated user's repositories.
 
 #### Phase 5: Security & Deployment Prep
