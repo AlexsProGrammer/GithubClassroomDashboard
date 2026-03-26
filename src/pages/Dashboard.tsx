@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import {
   checkSolutionExists,
   fetchAuthenticatedUsername,
+  fetchHeadCommit,
   fetchUserClassroomRepos,
   fetchQuestStatus,
   getSolutionLink,
@@ -105,6 +106,35 @@ export default function Dashboard() {
 
               console.error(`[Dashboard] Failed to check solution for ${quest.id}:`, error)
               return null
+            }
+          }),
+        )
+
+        await Promise.all(
+          fetchedQuests.map(async (quest) => {
+            try {
+              const headCommit = await fetchHeadCommit(quest.repoOwner, quest.repoName)
+
+              if (!headCommit) {
+                console.log(
+                  `[Dashboard][HeadCommit] ${quest.repoOwner}/${quest.repoName}: no commits found.`,
+                )
+                return
+              }
+
+              console.log(`[Dashboard][HeadCommit] ${quest.repoOwner}/${quest.repoName}`, {
+                sha: headCommit.sha,
+                authorName: headCommit.authorName,
+                authorEmail: headCommit.authorEmail,
+                authoredAt: headCommit.authoredAt,
+                message: headCommit.message,
+                url: headCommit.url,
+              })
+            } catch (error) {
+              console.error(
+                `[Dashboard][HeadCommit] Failed for ${quest.repoOwner}/${quest.repoName}:`,
+                error,
+              )
             }
           }),
         )

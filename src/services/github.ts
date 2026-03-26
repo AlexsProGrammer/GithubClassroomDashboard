@@ -15,6 +15,15 @@ export type GitHubRepo = {
 
 export type QuestStatusConclusion = 'success' | 'failure' | null
 
+export type HeadCommitInfo = {
+  sha: string
+  authorName: string
+  authorEmail: string | null
+  authoredAt: string | null
+  message: string
+  url: string
+}
+
 type SolutionsRepoConfig = {
   owner: string
   repo: string
@@ -148,6 +157,41 @@ export async function fetchQuestStatus(
   }
 
   return null
+}
+
+export async function fetchHeadCommit(
+  owner: string,
+  repo: string,
+): Promise<HeadCommitInfo | null> {
+  const trimmedOwner = owner.trim()
+  const trimmedRepo = repo.trim()
+
+  if (!trimmedOwner || !trimmedRepo) {
+    throw new Error('Owner and repository are required to fetch head commit.')
+  }
+
+  const octokit = createGitHubClientFromStore()
+  const response = await octokit.rest.repos.listCommits({
+    owner: trimmedOwner,
+    repo: trimmedRepo,
+    per_page: 1,
+  })
+
+  const headCommit = response.data[0]
+
+  if (!headCommit) {
+    return null
+  }
+
+  return {
+    sha: headCommit.sha,
+    authorName:
+      headCommit.commit.author?.name ?? headCommit.author?.login ?? 'Unknown Author',
+    authorEmail: headCommit.commit.author?.email ?? null,
+    authoredAt: headCommit.commit.author?.date ?? null,
+    message: headCommit.commit.message,
+    url: headCommit.html_url,
+  }
 }
 
 export function getSolutionLink(questId: string): string | null {
