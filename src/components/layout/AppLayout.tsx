@@ -1,9 +1,23 @@
-import { Link, Outlet } from 'react-router-dom'
+import { Link, Outlet, useNavigate } from 'react-router-dom'
+import { signOutFromFirebase } from '../../services/firebase'
 import { useAuthStore } from '../../store/useAuthStore'
 
 export function AppLayout() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated)
   const user = useAuthStore((state) => state.user)
+  const clearAuth = useAuthStore((state) => state.clearAuth)
+  const navigate = useNavigate()
+
+  const handleLogout = async () => {
+    try {
+      await signOutFromFirebase()
+    } catch (error) {
+      console.error('[Auth] Firebase sign-out failed:', error)
+    } finally {
+      clearAuth()
+      navigate('/login', { replace: true })
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -18,6 +32,15 @@ export function AppLayout() {
               <Link className="hover:text-slate-900" to="/dashboard">
                 Dashboard
               </Link>
+            ) : null}
+            {isAuthenticated ? (
+              <button
+                className="rounded-md border border-slate-300 px-3 py-1 text-xs font-medium text-slate-700 hover:bg-slate-100"
+                onClick={handleLogout}
+                type="button"
+              >
+                Logout
+              </button>
             ) : null}
             <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700">
               {isAuthenticated

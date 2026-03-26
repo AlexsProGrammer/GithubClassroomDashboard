@@ -74,12 +74,12 @@ Kopiere den folgenden Textblock und speichere ihn als `IMPLEMENTATION.md` in dei
 - [x] **Step 4.3:** Implement `Dashboard.tsx`. On mount, use Octokit to fetch the workflow statuses for all predefined Quests based on the logged-in user's GitHub username.
 - [x] **Step 4.4:** Protect the `/dashboard` route. If `!isAuthenticated` in Zustand, redirect to `/login`.
 - [x] **Step 4.5:** Implement a function `checkSolutionExists(questId)` using `octokit.rest.repos.getContent`. It should query the public solutions repository for a folder matching the `questId`. If it returns a 200 status, render the 'View Solution' button linking to `https://github.dev/{owner}/{solutions-repo}/tree/main/{questId}`. Catch 404 errors gracefully and hide the button.
-- [ ] **Verification:** Log in via the UI. Verify the Dashboard renders a list of QuestCards. Cards should display green checkmarks or red X's reflecting the live GitHub Actions status of the authenticated user's repositories.
+- [x] **Verification:** Log in via the UI. Verify the Dashboard renders a list of QuestCards. Cards should display green checkmarks or red X's reflecting the live GitHub Actions status of the authenticated user's repositories.
 
 #### Phase 5: Security & Deployment Prep
-- [ ] **Step 5.1:** Add a Content Security Policy (CSP) `<meta>` tag to `index.html` allowing scripts only from `'self'` and connections to `api.github.com` and `*.firebaseapp.com`.
-- [ ] **Step 5.2:** Add a "Logout" button to the Navbar that clears the Zustand store and calls Firebase `signOut()`.
-- [ ] **Step 5.3:** Implement an Error Boundary or UI toast to gracefully handle GitHub API rate limit errors (HTTP 403) instructing the user to try again later.
+- [x] **Step 5.1:** Add a Content Security Policy (CSP) `<meta>` tag to `index.html` allowing scripts only from `'self'` and connections to `api.github.com` and `*.firebaseapp.com`.
+- [x] **Step 5.2:** Add a "Logout" button to the Navbar that clears the Zustand store and calls Firebase `signOut()`.
+- [x] **Step 5.3:** Implement an Error Boundary or UI toast to gracefully handle GitHub API rate limit errors (HTTP 403) instructing the user to try again later.
 - [ ] **Verification:** Run `pnpm build` and `pnpm preview`. Test the logout flow (ensure session storage is wiped). Verify via browser network tab that CSP headers/meta tags are active and blocking unauthorized domains.
 
 ## 3. Global Testing Strategy

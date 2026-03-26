@@ -2,6 +2,7 @@ import { initializeApp } from 'firebase/app'
 import {
   GithubAuthProvider,
   getAuth,
+  signOut,
   signInWithPopup,
   type User,
 } from 'firebase/auth'
@@ -42,4 +43,8 @@ export async function signInWithGitHub(): Promise<{ user: User; accessToken: str
     user: result.user,
     accessToken,
   }
+}
+
+export async function signOutFromFirebase(): Promise<void> {
+  await signOut(firebaseAuth)
 }

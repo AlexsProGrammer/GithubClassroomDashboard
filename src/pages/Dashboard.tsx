@@ -11,6 +11,15 @@ import { QuestCard, type QuestCardStatus } from '../components/quests/QuestCard'
 import { useAuthStore } from '../store/useAuthStore'
 import type { ClassroomQuest } from '../types'
 
+function getErrorStatusCode(error: unknown): number | null {
+  if (typeof error !== 'object' || error === null || !('status' in error)) {
+    return null
+  }
+
+  const status = (error as { status?: unknown }).status
+  return typeof status === 'number' ? status : null
+}
+
 function formatTitleFromRepoName(repoName: string): string {
   return repoName
     .replace(/[-_]+/g, ' ')
@@ -25,11 +34,13 @@ export default function Dashboard() {
   const [solutionLinks, setSolutionLinks] = useState<Record<string, string>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [errorMessage, setErrorMessage] = useState<string | null>(null)
+  const [rateLimitMessage, setRateLimitMessage] = useState<string | null>(null)
 
   useEffect(() => {
     void (async () => {
       setIsLoading(true)
       setErrorMessage(null)
+      setRateLimitMessage(null)
 
       try {
         const username = await fetchAuthenticatedUsername()
@@ -63,6 +74,12 @@ export default function Dashboard() {
 
               return [quest.id, status] as const
             } catch (error) {
+              if (getErrorStatusCode(error) === 403) {
+                setRateLimitMessage(
+                  'GitHub API rate limit reached. Please wait a few minutes and try again.',
+                )
+              }
+
               console.error(
                 `[Dashboard] Failed to fetch workflow status for ${quest.repoOwner}/${quest.repoName}:`,
                 error,
@@ -80,6 +97,12 @@ export default function Dashboard() {
 
               return url ? [quest.id, url] as const : null
             } catch (error) {
+              if (getErrorStatusCode(error) === 403) {
+                setRateLimitMessage(
+                  'GitHub API rate limit reached. Please wait a few minutes and try again.',
+                )
+              }
+
               console.error(`[Dashboard] Failed to check solution for ${quest.id}:`, error)
               return null
             }
@@ -89,6 +112,12 @@ export default function Dashboard() {
         setQuestStatuses(Object.fromEntries(entries))
         setSolutionLinks(Object.fromEntries(solutions.filter((value) => value !== null)))
       } catch (error) {
+        if (getErrorStatusCode(error) === 403) {
+          setRateLimitMessage(
+            'GitHub API rate limit reached. Please wait a few minutes and try again.',
+          )
+        }
+
         const message = error instanceof Error ? error.message : 'Unknown error'
         setErrorMessage(`Failed to load quest statuses: ${message}`)
         console.error('[Dashboard] Failed to load quest statuses:', error)
@@ -106,6 +135,15 @@ export default function Dashboard() {
           Active login: <span className="font-medium">{user?.name ?? 'GitHub User'}</span>
         </p>
         {isLoading ? <p className="mt-2 text-sm text-slate-600">Loading quest statuses...</p> : null}
+        {rateLimitMessage ? (
+          <div
+            aria-live="polite"
+            className="mt-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900"
+            role="alert"
+          >
+            {rateLimitMessage}
+          </div>
+        ) : null}
         {errorMessage ? <p className="mt-2 text-sm text-rose-600">{errorMessage}</p> : null}
       </div>
 
